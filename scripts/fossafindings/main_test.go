@@ -106,7 +106,7 @@ func findingsCommand(t *testing.T, env map[string]string, handler http.HandlerFu
 
 func emptyFindings(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/revisions/") {
-		_, _ = fmt.Fprintf(w, `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":42}`, testProject+"$"+testRevision)
+		_, _ = fmt.Fprintf(w, `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":42,"unresolved_licensing_issue_count":0}`, testProject+"$"+testRevision)
 	} else {
 		_, _ = w.Write([]byte(`{"issues":[]}`))
 	}
@@ -263,6 +263,40 @@ func TestFindingsRejectsTruncatedIssueList(t *testing.T) {
 	})
 	if err := c.run(context.Background()); err == nil || !strings.Contains(err.Error(), "count") {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestFindingsRejectsMissingRevisionCount(t *testing.T) {
+	for _, tc := range []struct {
+		name, count string
+		read        int
+	}{
+		{"initial omitted", "", 1},
+		{"initial null", `,"unresolved_licensing_issue_count":null`, 1},
+		{"final omitted", "", 2},
+		{"final null", `,"unresolved_licensing_issue_count":null`, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			reads := 0
+			env := map[string]string{"FOSSA_API_KEY": "test-secret", "FOSSA_REVISION": testRevision}
+			c, output := findingsCommand(t, env, func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasPrefix(r.URL.Path, "/api/revisions/") {
+					reads++
+					if reads == tc.read {
+						_, _ = fmt.Fprintf(w, `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":42%s}`, testProject+"$"+testRevision, tc.count)
+						return
+					}
+				}
+				emptyFindings(w, r)
+			})
+			if err := c.run(context.Background()); err == nil {
+				t.Fatalf("missing revision count accepted as zero: %s", output)
+			}
+			reports, err := filepath.Glob(filepath.Join(env["FOSSA_OUTPUT_DIR"], "*", "report.json"))
+			if err != nil || len(reports) != 0 || output.Len() != 0 {
+				t.Fatalf("incomplete evidence published: reports=%v, output=%s, error=%v", reports, output, err)
+			}
+		})
 	}
 }
 

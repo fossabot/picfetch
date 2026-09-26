@@ -80,6 +80,8 @@ keeps photos visible while dragging, and shows progress while checking duplicate
   and PicFetch/version scope; retain all notices and global license policies.
   See [the disposition record](docs/fossa-license-ci-2026-09-26.md) and use
   `make fossa-findings PR=61` to check the latest scan independently.
+- Reject incomplete FOSSA revision counts rather than publishing a false
+  zero-findings report; cover missing and null counts on both revision reads.
 - Make AVIF notice validation work with a fresh Go module cache while retaining
   the reviewed payload and license checks.
 - PR 58 review hardening: isolated map trials preserve normal updater files,
@@ -95,6 +97,12 @@ keeps photos visible while dragging, and shows progress while checking duplicate
 - Improve automated checks for Linux desktop integration.
 
 ## Open
+
+- **PR 61 review-loop gates:** obtain fresh latest-head Codex code/security
+  reviews, CI and CodeQL results. Qodana's approved fork run failed before
+  analysis because its token was empty; preserve fork-secret protections.
+  Renewed token wiring is in separate PR 63, not evidence of a PR 61 scan.
+  See [the review-loop record](plans/2026-09-26-pr61-license-notices.md).
 
 - **PR 61 IDE inspections:** GoLand analysis of the isolated worktree remains
   unavailable. The license-policy decisions are applied, but do not substitute

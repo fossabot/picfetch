@@ -199,11 +199,12 @@ func (c command) retrieve(ctx context.Context, key string) (resultErr error) {
 	if err != nil {
 		return err
 	}
-	var state revisionState
+	// A missing or null count must not look like a confirmed zero.
+	state := revisionState{Count: -1}
 	if err := json.Unmarshal(revisionRaw, &state); err != nil {
 		return errors.New("invalid revision response")
 	}
-	if state.Locator != project+"$"+sha || !state.Resolved || !state.IsSteady || state.IsStale || state.Error != "" || state.ScanID <= 0 {
+	if state.Locator != project+"$"+sha || !state.Resolved || !state.IsSteady || state.IsStale || state.Error != "" || state.ScanID <= 0 || state.Count < 0 {
 		return errors.New("revision analysis is not ready; report incomplete")
 	}
 	var all []json.RawMessage
@@ -263,7 +264,7 @@ func (c command) retrieve(ctx context.Context, key string) (resultErr error) {
 	if err != nil {
 		return err
 	}
-	var final revisionState
+	final := revisionState{Count: -1}
 	if err := json.Unmarshal(finalRaw, &final); err != nil || final != state {
 		return errors.New("revision scan changed during retrieval; retry")
 	}

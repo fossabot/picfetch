@@ -284,6 +284,50 @@ is not a passed check; unexpected findings remain active.
   strictly read-only; the one-off mutation script and private raw reports stay
   ignored under `.scratch/`.
 
+## GitHub Codex review loop (2026-09-26)
+
+- User invoked the repository review loop on PR 61. The fixed review base is
+  `1141013`, and the initial head is `fa45732`. The existing plan is the spec;
+  repository conventions are the standards. The lead owns both assessments and
+  all fixes. One read-only scout checked existing GitHub bot reports and review
+  triggers, with no code-review or mutation authority (budget/actual: 1/1).
+- No unresolved review threads or prior reviews existed at the initial audit.
+  Requested `@codex review` in comment `5848722187`; no bot acknowledgement was
+  visible at the subsequent audit. A clean review of the final pushed head,
+  including security review, remains required.
+- The lead found one spec defect: absent or null
+  `unresolved_licensing_issue_count` decoded as zero, allowing an incomplete
+  FOSSA response to publish a completed zero-findings report. Both revision
+  reads now initialize the count to an invalid sentinel; the initial readiness
+  check rejects it and the final consistency check rejects a missing count.
+- Command-boundary regression coverage exercises omitted and null counts on
+  both reads. All four cases failed before the fix. Removing each guard alone
+  also reproduced its two failures; both guards were restored afterwards.
+  `go test -tags no_emoji,nodynamic -race -count=1 ./scripts/fossafindings`,
+  focused `go vet`, `make fmt-check check-qodana-test-exclusions`, and
+  `git diff --check` pass. No new test file or UI shard assignment is needed.
+  Fixed Go content SHA-256: `main.go` =
+  `1d13d3902a9db5b83c7a09865cbf7bb4acbc26b87077bb62a0bb45251729b27c`;
+  `main_test.go` =
+  `c1e12f16d99299d9734c61a2b58b6aa56aef9438779c44dd746b97e1c39565bb`
+  (both under `scripts/fossafindings/`).
+- The fixed command also retrieved live scan `122609801` for `fa45732`: zero
+  active license findings, with all three FOSSA GitHub statuses passing.
+  Private evidence: `.scratch/fossa-findings/20260926T182916Z-fa457320c97d-1296280927/`.
+  This does not establish FOSSA status on a subsequent commit.
+- Approved only the existing, exact-head fork runs: CI `36261995156`, CodeQL
+  `36261995130`, Qodana `36261995105`. Qodana failed with an empty
+  `QODANA_TOKEN` before analysis; no usable SARIF was produced. The renewed
+  token reference is in separate PR 63, and fork-secret protections remain
+  intact. The user's renewal is not treated as a waived Qodana gate. Other
+  CI/CodeQL jobs were still running at this audit; the full suite belongs to
+  GitHub for this loop, not a duplicate broad local run.
+- GoLand could not inspect the isolated PR worktree because only the user's
+  other checkout was open. Requested a separate worktree window; all-warning
+  IDE inspection remains unverified. A passing test or vet run does not
+  substitute for it. Keep these external gates open until actual latest-head
+  evidence is available; do not merge or change repository security settings.
+
 ## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |
@@ -294,3 +338,4 @@ is not a passed check; unexpected findings remain active.
 | Authenticated API contract lookup | 1/1 | Lead | No |
 | Read-only findings command | 0/0 | Lead, two rounds | One final gate |
 | Approved FOSSA API/scope lookup | 1/1 follow-up | Lead; scout gathered public docs | No; account-side and docs only |
+| GitHub review-loop service evidence | 1/1 | Lead; scout gathered bot metadata only | GitHub CI |
