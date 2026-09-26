@@ -348,6 +348,32 @@ is not a passed check; unexpected findings remain active.
   rather than bypassing fork-secret protections; no such change is authorized
   or performed yet. Latest-head checks and IDE inspection remain open.
 
+### GoLand inspection completed after opening the worktree
+
+- The user opened `/tmp/picfetch-pr61.7eCH9e` in a separate GoLand window.
+  Inspected all three Go files changed from the fixed base at revision
+  `548a9a023d532f346618fdd76d4635daadce1e19`, using the IDE's
+  `get_file_problems` fallback with `errorsOnly=false` (all warning severities).
+  Each response contained an empty findings list; no timeout or skipped file
+  was reported. No suppression or code change was needed.
+- Scope and SHA-256:
+  - `scripts/fossafindings/main.go`:
+    `1d13d3902a9db5b83c7a09865cbf7bb4acbc26b87077bb62a0bb45251729b27c`
+  - `scripts/fossafindings/main_test.go`:
+    `78ccaefc35ddcab3aa5f3eb659e5a9725147fb7ef57045da26f6999dc262fdb1`
+  - `scripts/updaternotices/main_test.go`:
+    `121855ddf24b888058003615dceacffd8a72819325052dfacbcc475ef5a2ac1f`
+- Tool/profile: GoLand's active project inspection configuration; the API did
+  not return a profile name. This satisfies the changed-file IDE fallback,
+  not Qodana's `qodana.starter` scan. Its evidence carries forward through this
+  documentation-only update with the analyzed revision above unchanged.
+- At that revision, all three FOSSA statuses, CI validation and native
+  Linux/Windows/macOS guards pass. Linux race partitions and Go CodeQL analysis
+  remain in progress. There are no unresolved review threads, but neither
+  latest-head Codex request has a visible acknowledgement or completed review.
+  Qodana still fails before analysis because the fork run receives no token.
+  Opening GoLand does not authorize a replacement PR or waive those gates.
+
 ## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |
