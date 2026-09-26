@@ -127,10 +127,94 @@ decision; the actual remote status remains the pass/fail signal.
   `f0ed64a` carries forward; do not repeat the full race suite for prose edits.
   The earlier GoLand limitation remains unverified, not cleared by this update.
 
-## Cost ledger
+## Follow-up: authenticated findings retrieval
+
+The user supplied an ignored local API credential and requested a reusable
+`make fossa-findings PR=61` command. Standard route: one tooling package,
+eight files including this record, architecture, Makefile, inspection exclusion,
+guide and todos. Lead owns implementation and review. One read-only scout checks
+the official API contract while the lead verifies authenticated responses.
+No third-party dependencies, license-scan exclusions or automatic resolutions are
+introduced. The command is strictly read-only; account-side decisions require
+separate, evidenced authorization. The token must never enter Git or artifacts.
+
+### Task: retrieve the current licensing findings
+
+Owner: T0 inline. Files: `scripts/fossafindings/{main.go,main_test.go}`,
+`Makefile`, `ARCHITECTURE.md`, `qodana.yaml`, this plan, the FOSSA guide, `todos.md`.
+Contract: `make fossa-findings PR=61` selects the latest remote PR head; explicit
+`FOSSA_REVISION=<sha>` selects a historical revision without GitHub access.
+Read `FOSSA_API_KEY` from the environment or `FOSSA_ENV_FILE` (default
+`.env.local`) without shell evaluation. Save a private, unique artifact directory
+under `.scratch/fossa-findings`, with raw pages and a concise JSON/Markdown report.
+Non-goals: resolve issues, alter policy, upload scans, or equate retrieval success
+with license approval. Initial scope is licensing issues, not security/quality.
+
+Acceptance criteria and verification:
+
+1. Latest-PR selection, all-page retrieval and saved source/version/issue evidence:
+   `go test ./scripts/fossafindings -run TestFindings` and a live Make invocation.
+2. Pending scans, invalid responses, repeated pages and authentication failures
+   fail explicitly, without a completed report or exposed credentials:
+   `go test ./scripts/fossafindings -run TestFindings`.
+3. No credential evaluation, forwarding on redirects, or write API operations;
+   command-line Make values remain literal data:
+   `go test ./scripts/fossafindings -run 'TestFindings|TestMake'`.
+4. Repository integration stays current: `make fmt-check
+   check-qodana-test-exclusions`, focused race tests, then `make verify` once.
+   Attempt GoLand inspections on both new Go files; unavailable is unverified.
+
+Test seam proposed to the user: CLI/API boundary using a local fake FOSSA server,
+with real artifact I/O and external GitHub command substitution. No application
+internals are mocked. Budget: one scout, two lead review rounds, one final full
+suite. Official API pagination is `page`/`count`; HTTP 202 is not a clean report.
+The evidence below records the completed match investigation; account-side
+resolutions remain pending separate approval.
+
+- Live `make fossa-findings PR=61` passed at `a1bd58e`, scan 122607011,
+  and retrieved all 15 issues. The root attribution endpoint confirms the two
+  new findings are restored Bitstream/LGPL notice copies; all prior provisional
+  matches agree with source evidence. No FOSSA writes have been made.
+- A count=1 probe returned five records, so the command deliberately continues
+  through an empty page instead of trusting the requested page size. It also
+  checks the revision's active count and stable scan identity.
+- RED/GREEN observed for latest-head pagination, literal dotenv reading,
+  missing Make target, truncated response count and JSON-escaped credential
+  reflection. Tests use real local HTTP and artifact I/O, not private helpers.
+- Negative verification deliberately disabled HTTP-status, redirect,
+  revision-readiness, scan-stability, scope and duplicate-page guards. The
+  corresponding tests failed for each violated behavior. Restored every guard;
+  `go test -race ./scripts/fossafindings -count=1` passed. Lead review also made
+  the final report an atomic completion marker. No mutation experiment remains.
+- `make fmt-check check-qodana-test-exclusions`, `git diff --check` and the
+  live Make invocation passed. `make help` exposes the new command. Both the
+  credential file and artifact directory are Git-ignored; the main checkout
+  remains clean. Final `make verify` passed formatting, metadata/notice gates,
+  vet and build, then hit an unchanged similarity-worker helper timeout in
+  `TestAnalysisProtocolPreservesLimitErrorsAndConfiguration/complete` (20s).
+  The helper stack was at `os.Exit(0)` / `runtime_beforeExit`, after delivering
+  its completed event. The same test passed three focused host race reruns
+  (36.559s total), with no code or timeout change. The complete race suite then
+  finished: all three UI shards passed (927.273s, 714.917s, 759.760s), and the
+  non-UI partition failed only this helper test. No data-race warnings appeared.
+  `make verify` exited 2; it is a failed gate, not made clean by the focused rerun.
+  Artifacts: `.scratch/race-runs/20260926T165532Z-Vg8OBK`.
+  The new command passed in that Docker run (1.602s).
+- Both new Go files were submitted to GoLand with all severities requested.
+  It rejected the isolated worktree because only the user's main checkout is
+  open. IDE inspections remain unverified; no user checkout files were changed.
+- Analyzed Go content SHA-256:
+  `scripts/fossafindings/main.go` =
+  `d0a60b358a8b36c0b54552e18e9eee7d317fae9a44e15914f2127ec8f0a571a4`;
+  `scripts/fossafindings/main_test.go` =
+  `115cb8cd982a8efc9937796de400d0829c9ee4bf13f899bf14f4e5718b8d913d`.
+
+## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |
 | --- | --- | --- | --- |
 | Repository changes | 0/0 | Lead | Final gate only |
 | FOSSA documentation | 1/1 | Lead | No |
 | Follow-up x/text source/build lookup | 1/1 | Lead | No; unchanged code |
+| Authenticated API contract lookup | 1/1 | Lead | No |
+| Read-only findings command | 0/0 | Lead, two rounds | One final gate |

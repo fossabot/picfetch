@@ -93,12 +93,20 @@ keeps photos visible while dragging, and shows progress while checking duplicate
 
 - **PR 61 FOSSA decisions:** notice fixes are pushed in `f0ed64a`; review the
   remaining findings using [the disposition guide](docs/fossa-license-ci-2026-09-26.md).
-  The second export identifies all 13 original issues, including five denied
-  CC findings in non-distributed upstream docs/test samples, but still refers
-  to pre-fix `cf24b84`. Export the latest PR revision (the `f0ed64a` check reports
-  15), confirm File Matches and record project/version-scoped decisions. A fresh
-  passing remote check is still required; local checks cannot approve policy
-  findings, and the two additional live issues remain unidentified.
+  `make fossa-findings PR=61` now retrieves current scoped API evidence using
+  the ignored local credential. All 15 findings at `a1bd58e` have verified file
+  matches, including non-distributed docs/test/PowerPC/Java/C# sources and the
+  two new root findings from restored Bitstream/LGPL notice copies. Record the
+  authorized project/version decisions in FOSSA, then verify a fresh passing
+  remote check. Local notice checks and successful retrieval do not approve
+  policy findings. GoLand analysis of the isolated worktree remains unavailable.
+
+- **Similarity protocol race timeout:** the PR 61 final Docker race run hit
+  `TestAnalysisProtocolPreservesLimitErrorsAndConfiguration/complete`'s 20-second
+  helper deadline while the helper was at `os.Exit(0)`. Its code is unchanged;
+  three focused host race reruns passed. Investigate load-sensitive helper exit
+  behavior separately; do not skip the test or count the failed full run as
+  passed. Evidence is in the [PR 61 record](plans/2026-09-26-pr61-license-notices.md).
 
 - **Application architecture:** the [cross-PR assessment](needs_refactoring.md)
   recommends shared command policy (MA-028), explicit browsing ownership and

@@ -4,7 +4,90 @@ Checked against FOSSA's official documentation on 2026-09-26. This document
 separates repository compliance work from the FOSSA decisions needed to clear
 the check. It does not record a completed FOSSA review or a passing remote scan.
 
-## Evidence and proposed dispositions
+## Retrieve current findings
+
+Run from the repository root:
+
+```sh
+make fossa-findings PR=61
+```
+
+Requires Go, authenticated `gh`, and a FOSSA key with permission to read this
+project's issues (a push-only key is insufficient). Put `FOSSA_API_KEY=...` in
+the ignored `.env.local`, with owner-only permissions (`chmod 600 .env.local`),
+or supply it through the process environment. Never pass the token as a Make
+argument, paste it into reports, or commit it. The command parses the credential
+file as literal data; it does not source or execute it.
+
+Optional overrides:
+
+```sh
+# Isolated worktree using the original checkout's ignored credential file:
+make fossa-findings PR=61 FOSSA_ENV_FILE=/path/to/checkout/.env.local
+# Historical revision, without needing gh (do not also supply PR):
+make fossa-findings FOSSA_REVISION=a1bd58ed380313573c7688a12b59d01d69944737
+```
+
+Without either selector, `gh` resolves the current branch's PR. With `PR=61`,
+the command always asks GitHub for that PR's current head, not local `HEAD`.
+Reports go to a unique private directory under `.scratch/fossa-findings`
+(override with `FOSSA_OUTPUT_DIR`). Read `summary.md` for the issue list and
+`report.json` for the complete issue objects, revision SHA, scan ID and retrieval
+time. `revision.json` and `issues-page-*.json` retain API evidence, normalized
+only for safe credential redaction. `report.json` is published last, atomically;
+its absence means an incomplete retrieval, even if other artifacts exist.
+
+All active licensing types are retrieved, including Flagged and Denied. The
+command requests every page until an empty page, rejects duplicate IDs, checks
+each issue's project/revision/scan, compares the revision's active count, and
+checks that the scan remains stable. HTTP 202, unready/stale revisions, bad
+credentials and partial/changed responses fail explicitly. Exit zero means
+**retrieval succeeded**, even with findings; it is not license approval or proof
+that GitHub's CI check passed. No ignore, policy, correction or upload API is used.
+[Issue API contract](https://docs.fossa.com/docs/api/reference/issues/getIssues).
+
+## Authenticated file-match verification
+
+On 2026-09-26 the API confirmed **15 active findings** at
+`a1bd58ed380313573c7688a12b59d01d69944737`, scan `122607011`.
+All six dependency-detail responses agreed with the source investigation below:
+Fyne's DejaVu license; GLFW's two MinGW headers; canonical JSON's four Java/C#
+files; x/crypto's `chacha20/chacha_ppc64x.s`; go-digest's `README.md` and
+`LICENSE.docs`; and x/text's `internal/testtext/text.go` plus
+`unicode/norm/normalize_test.go` for all four CC versions. The additional
+`cases/map_test.go` source references below were not FOSSA matches.
+
+The root revision attribution report confirmed:
+
+| Root license | Complete matching paths |
+| --- | --- |
+| BitstreamVera | `THIRD-PARTY-NOTICES.md` |
+| LGPL-2.1-or-later | `THIRD-PARTY-NOTICES.md`, `scripts/updaternotices/licenses/LGPL-2.1.txt` |
+| GPL-3.0-only | `THIRD-PARTY-NOTICES.md`, `internal/heic/notices/GPL-3.txt` |
+| LGPL-3.0-only | `THIRD-PARTY-NOTICES.md`, `internal/heic/notices/LGPL-3.txt` |
+| LGPL-3.0-or-later | `internal/heic/libheif_abi.h` |
+| Apache-2.0 WITH LLVM exception | `THIRD-PARTY-NOTICES.md`, `scripts/avifnotices/licenses/compiler-rt-LICENSE.txt`, `scripts/avifnotices/licenses/wasi-libc-LICENSE-APACHE-LLVM.txt` |
+
+The two extra findings are root issue **21232434** (BitstreamVera) and
+**21232433** (LGPL-2.1-or-later), both from the restored notice texts. Their
+disposition is required notice delivery for the already reviewed font/header
+uses, not an additional implementation dependency or a reason to remove notices.
+All formerly provisional file-match conditions below are now verified. These
+facts support the proposed dispositions; recording them in FOSSA is a separate
+account-side action, not performed merely by retrieving evidence.
+
+For future file-level investigations, the dependency endpoint is
+`GET /api/v2/revisions/{full-project-revision}/dependencies/{issue-source-id}`
+with `includeMatches=true`, `includeLicenseText=true` and
+`includeResolutionNotes=true`. For the root itself use
+`GET /api/v2/revisions/{full-project-revision}/attribution` with `format=TXT`,
+`includeLicenseScan=true`, `includeFileMatches=true`, `includeLicenseHeaders=true`
+and `includeProjectLicense=true`. URL-encode each locator as one path component.
+These supplementary matches are not downloaded by the issue-list Make target.
+[Dependency evidence](https://docs.fossa.com/docs/api/reference/dependencies/getProjectDependency),
+[first-party attribution](https://docs.fossa.com/docs/api/reference/revisions/getRevisionAttributionV2).
+
+## Historical CSV evidence and proposed dispositions
 
 The first CSV contained eight active **Flagged** issues. The second export,
 `CSV_Licensing_ISSUES_2026-09-26_161730994Z.csv`, contains those same eight rows
@@ -13,9 +96,10 @@ discrepancy. Both exports still describe revision
 `cf24b842e471a3f5dc32e130b38ed8798b76f2b0`, analyzed at 14:25 UTC on
 2026-09-26, before the notice fix. Export time is not analysis time.
 
-The live check on notice-fix commit
+The earlier live check on notice-fix commit
 `f0ed64a0ea319d16bd49013ab13c580d3b6355b3` reports **15 issues**, updated at
-15:05:37 UTC. Its complete current issue list is not in either supplied CSV.
+15:05:37 UTC. Its complete issue list was not in either supplied CSV;
+authenticated retrieval above now identifies all fifteen.
 Open the latest PR check's Details link before exporting or resolving issues.
 The CSV's `originPaths` identify dependency discovery, not licensed source file
 matches. The following reasons are proposals for the project owner to validate
@@ -37,9 +121,11 @@ and record, not approvals already made in FOSSA or a legal opinion.
 | 21232401 | GPL-3.0-only; PicFetch root | **Provisional: inspect File Matches first.** If all matches are the complete GPL text supplied with the LGPL notices, record that this is required third-party notice delivery, not GPL-only licensing of PicFetch implementation. Do not delete the text to silence detection. If implementation files match, investigate them separately. |
 | 21232400 | LGPL-3.0-only; PicFetch root | **Provisional: inspect File Matches first.** If all matches are copies of the LGPL version 3 license text, record their notice-only role; the identified libheif-derived declarations explicitly use LGPL-3.0-or-later. Keep that real finding and its obligations separate. Additional implementation matches require review. |
 
-For root-level findings, **Selected version** refers to the scanned Git revision,
-not a Go module version. A new commit can require reviewing these again; apply
-the decision to the actual latest PR revision, not only the historical CSV SHA.
+For root-level findings, issue `source.version` can retain the first-seen Git
+revision even in a later scan. Verify `projects[].revisionId` and
+`revisionScanId` for current scope; do not infer stale analysis from the source
+SHA alone. A new commit can require review again; apply decisions from the
+actual latest PR revision, not only the historical CSV.
 
 ### Source/build evidence for those reasons
 
@@ -219,9 +305,8 @@ available controls and verify the actual GitHub License Compliance status. A
 green local notice check is not evidence that the remote FOSSA gate passed.
 [Automatic updates](https://docs.fossa.com/docs/project-setup/automatic-updates).
 
-The second export resolves the original 13-versus-eight count discrepancy, but
-still predates the notice fix. Export **all active licensing issue types** from
-the latest PR revision, including both Flagged and Denied. The observed current
-check has 15 issues; the additional two are not identified by the supplied data
-and must not be guessed or pre-approved. Completion requires every live finding
-to have a validated disposition and the check to pass on the latest PR commit.
+Use `make fossa-findings PR=61` to retrieve **all active licensing issue types**
+from the latest PR revision, including both Flagged and Denied. The authenticated
+investigation above identifies all fifteen findings. Completion still requires
+recording the validated account-side dispositions and verifying that the check
+passes on the latest PR commit; the evidence alone does not change issue status.
