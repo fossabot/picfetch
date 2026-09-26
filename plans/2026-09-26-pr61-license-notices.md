@@ -209,6 +209,25 @@ resolutions remain pending separate approval.
   `scripts/fossafindings/main_test.go` =
   `115cb8cd982a8efc9937796de400d0829c9ee4bf13f899bf14f4e5718b8d913d`.
 
+## Merge current main (2026-09-26)
+
+- Merge `origin/main` at `1141013` into the PR head `61598ed`, preserving the
+  existing PR history. The only textual conflict is two independent completed
+  work entries in `todos.md`; retain both entries.
+- Keep main's Sigstore v1.11.0 dependency/notice metadata and fresh-cache AVIF
+  notice validation unchanged. Preserve this PR's desktop license notices and
+  read-only FOSSA findings command. No FOSSA account-side changes are authorized
+  or performed by this merge.
+- Verification passed on the merged tree: `go test -tags no_emoji,nodynamic
+  -race -count=1 ./scripts/avifnotices ./scripts/updaternotices
+  ./scripts/fossafindings`, `make verify-build` (formatting, metadata/assets,
+  license notices, vet and build), and `git diff --check`. The findings command
+  retains the exact content hashes recorded above; dependency and AVIF checker
+  files match incoming main. No application code was manually changed.
+- The complete race suite was not repeated for this documentation-only conflict
+  resolution. This merge does not supersede the full-suite timeout or unavailable
+  IDE inspection evidence recorded above.
+
 ## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |
