@@ -328,6 +328,26 @@ is not a passed check; unexpected findings remain active.
   substitute for it. Keep these external gates open until actual latest-head
   evidence is available; do not merge or change repository security settings.
 
+### Readiness-test fixture follow-up
+
+- After `82f714e`, lead review caught that the older readiness fixtures also
+  omitted the count. Give their pending, stale, missing-scan, error and
+  changed-scan responses explicit zero counts so the new count check cannot
+  mask the original readiness/consistency behavior. No production code changed.
+- Temporarily disabling readiness validation made all four initial-read cases
+  fail with an unexpected successful report; restored it immediately. The
+  complete findings-command race suite passes with the explicit fixtures.
+  New `scripts/fossafindings/main_test.go` SHA-256:
+  `78ccaefc35ddcab3aa5f3eb659e5a9725147fb7ef57045da26f6999dc262fdb1`.
+- At `82f714e`, live FOSSA scan `122610177` and all three GitHub FOSSA checks
+  passed with zero active license findings. Approved exact-head CI/CodeQL runs
+  `36262912841`/`36262912912` were still running. Qodana `36262912885` failed
+  before analysis with an empty token; its 156-byte artifact is not SARIF
+  evidence. Code/security requests `5848781622`/`5848781767` had no visible bot
+  acknowledgement. Requested approval for a repository-owned replacement PR
+  rather than bypassing fork-secret protections; no such change is authorized
+  or performed yet. Latest-head checks and IDE inspection remain open.
+
 ## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |

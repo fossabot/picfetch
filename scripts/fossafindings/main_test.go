@@ -208,11 +208,11 @@ func TestFindingsRejectsUnreadyOrChangingScan(t *testing.T) {
 		name, revision string
 		change         bool
 	}{
-		{"pending", `{"locator":%q,"isSteady":false,"resolved":false,"latestRevisionScanId":42}`, false},
-		{"stale", `{"locator":%q,"isSteady":true,"resolved":true,"is_stale":true,"latestRevisionScanId":42}`, false},
-		{"no scan", `{"locator":%q,"isSteady":true,"resolved":true}`, false},
-		{"error", `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":42,"error":"test-secret"}`, false},
-		{"new scan", `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":43}`, true},
+		{"pending", `{"locator":%q,"isSteady":false,"resolved":false,"latestRevisionScanId":42,"unresolved_licensing_issue_count":0}`, false},
+		{"stale", `{"locator":%q,"isSteady":true,"resolved":true,"is_stale":true,"latestRevisionScanId":42,"unresolved_licensing_issue_count":0}`, false},
+		{"no scan", `{"locator":%q,"isSteady":true,"resolved":true,"unresolved_licensing_issue_count":0}`, false},
+		{"error", `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":42,"error":"test-secret","unresolved_licensing_issue_count":0}`, false},
+		{"new scan", `{"locator":%q,"isSteady":true,"resolved":true,"latestRevisionScanId":43,"unresolved_licensing_issue_count":0}`, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			reads := 0
