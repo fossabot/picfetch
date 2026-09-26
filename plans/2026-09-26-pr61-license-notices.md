@@ -3,7 +3,9 @@
 Route: Standard. Repository-only follow-up requested on 2026-09-26.
 Base: PR 61, `cf24b842e471a3f5dc32e130b38ed8798b76f2b0`.
 Worktree: isolated from the user's active checkout. The user subsequently
-authorized a commit and push to PR 61; no merge, release or FOSSA write is in scope.
+authorized a commit and push to PR 61. FOSSA writes were outside the initial
+repository-only scope; the explicit approval recorded in the final follow-up
+authorizes the fifteen scoped decisions. No PR merge or release is authorized.
 
 ## Scope and decisions
 
@@ -228,6 +230,60 @@ resolutions remain pending separate approval.
   resolution. This merge does not supersede the full-suite timeout or unavailable
   IDE inspection evidence recorded above.
 
+## Follow-up: approved FOSSA dispositions (2026-09-26)
+
+The user explicitly approved all three proposed groups: seven non-shipped
+material findings, four required-notice-copy findings, and four documented
+uses. Authorization is limited to PicFetch and the exact reviewed versions,
+with evidence attached; it does not cover global policy changes, license
+corrections, all-version auto-ignore rules, or new/changed matches.
+
+Lead owns fresh source-match validation, resolution writes and the final gate.
+One existing API scout verifies the public resolution/scope/status contract
+while the lead retrieves the latest scan. This independent, read-only-to-FOSSA
+lookup needs no project credentials or source context; its sole local artifact
+is `.scratch/fossa-resolution-api.md`, and the lead checks each conclusion
+against its cited primary source. Budget: one scout follow-up, no code changes
+or full test-suite rerun. Repository deliverables are this evidence record,
+the disposition guide and `todos.md`.
+
+Acceptance: `make fossa-findings PR=61` must identify the latest PR SHA, preserve
+the approved identity/version/match scope before writes, and show no remaining
+active licensing findings afterwards. Read back every decision and verify the
+actual GitHub License Compliance status on that SHA. Pending or failed status
+is not a passed check; unexpected findings remain active.
+
+- Fresh report at `7dac408`, scan `122609158`, contained the same 15 issue IDs,
+  licenses and source versions as the approved report. Six dependency-detail
+  responses and the complete root attribution report matched every reviewed
+  file path exactly. Evidence: `.scratch/fossa-approved-decisions-7dac408/`.
+- All fifteen decisions were applied individually with `PUT /api/v2/issues`,
+  action `ignore`, reason `other`, and distinct evidence notes. Requests used
+  explicit PicFetch/revision/scan, ID, source-version and license filters. A
+  read-only preflight caught ineffective ID-only filtering before any write;
+  adding the exact source-version/license filters selected one issue per call.
+  Every write response confirmed `count: 1` and the expected `issueId` (the
+  latter is an additional live field beyond the documented count). The first
+  response stopped a strict schema check; readback verified it before any
+  further write, without reapplying the decision.
+- Independent readback confirmed all fifteen approved identities in the ignored
+  set, each note exactly preserved and each occurrence marked manual. The
+  active licensing set was empty; the applicable ignore-rule list was empty
+  both before and after. No policy, license-correction or all-version rule
+  endpoint was used. Root source IDs retain their first-seen SHA; the queries
+  retained those exact source IDs and separately scoped the current revision.
+- At the pre-documentation-push audit, FOSSA's revision summary still reported
+  fifteen and GitHub still displayed the old failed scan. Consequently
+  `make fossa-findings PR=61` correctly rejected the inconsistent count rather
+  than reporting success. A fresh revision scan after the evidence push and
+  the actual GitHub status remain the completion gate; issue resolution alone
+  is not proof of a passing check.
+- No tracked Go code, notice text or dependency changed in this follow-up.
+  The merge's focused race and `make verify-build` evidence carries forward;
+  no full-suite or IDE claim is upgraded. The Make retrieval command remains
+  strictly read-only; the one-off mutation script and private raw reports stay
+  ignored under `.scratch/`.
+
 ## Updated cost ledger
 
 | Task | Spawns budget/actual | Review ownership | Full suite |
@@ -237,3 +293,4 @@ resolutions remain pending separate approval.
 | Follow-up x/text source/build lookup | 1/1 | Lead | No; unchanged code |
 | Authenticated API contract lookup | 1/1 | Lead | No |
 | Read-only findings command | 0/0 | Lead, two rounds | One final gate |
+| Approved FOSSA API/scope lookup | 1/1 follow-up | Lead; scout gathered public docs | No; account-side and docs only |

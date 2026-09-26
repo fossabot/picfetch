@@ -1,8 +1,52 @@
 # PR 61: completing the FOSSA licensing review
 
 Checked against FOSSA's official documentation on 2026-09-26. This document
-separates repository compliance work from the FOSSA decisions needed to clear
-the check. It does not record a completed FOSSA review or a passing remote scan.
+separates repository compliance work from the FOSSA account-side decisions.
+The approved decisions below are applied; a passing GitHub check must still be
+verified for the latest pushed revision, independently of this review record.
+
+## Approved decisions applied
+
+On 2026-09-26 the project owner explicitly approved all three groups:
+
+| Group | Applied issue IDs |
+| --- | --- |
+| Non-shipped documentation, test samples, Java/C# or PowerPC implementations | 21232392-21232398 |
+| Required GPL/LGPL/Bitstream notice copies | 21232400, 21232401, 21232433, 21232434 |
+| Reviewed font, GLFW header, libheif ABI declaration and AVIF runtime uses | 21232390, 21232391, 21232399, 21232402 |
+
+The fresh scan of PR 61 at `7dac4085c243004ad714d150f1a39725f11bbf49`, scan
+`122609158`, contained the same fifteen identities and source versions as the
+approved report. All file matches were fetched again and matched the exact
+paths documented below. Each issue received a separate manual resolution in
+PicFetch, with its rationale, source version and pinned evidence link stored
+in FOSSA. Readback confirmed all fifteen identities were ignored, the complete
+notes persisted, and `ignoredKind.ignoreType` was `manual` for every issue.
+No license classification, global policy, dependency, or all-version rule was
+changed; the applicable ignore-rule list was empty before and after.
+
+The complete active-issue query returned zero after these actions. At that
+point the revision summary still cached fifteen and GitHub still showed the
+earlier failed check. That discrepancy is not a passing CI result; the
+evidence/documentation push triggers a fresh revision scan. Use the command
+below and the latest PR check to verify the resulting state.
+
+Implementation used `PUT /api/v2/issues`, `type: ignore`, reason `other`, and
+per-issue notes, with explicit project/revision/scan, issue ID, source-version
+and license filters. The live GET route did not reliably narrow by `ids[]`
+or `ids[0]` alone; the additional version/license filters were verified to
+select exactly one approved issue before each write. Each response confirmed
+`count: 1` and the expected `issueId`. Never repeat a bulk action solely on the
+assumption that an ID filter was honored.
+[Update API](https://docs.fossa.com/docs/api/reference/issues/updateIssues),
+[scope controls](https://docs.fossa.com/docs/licenses/reviewing-licensing-issues).
+
+Raw before/after evidence is retained locally in
+`.scratch/fossa-approved-decisions-7dac408/`; no credential is included.
+These decisions cover only the reviewed findings, not new licenses, changed
+file matches, newly bundled components or future dependency versions. The
+historical provisional wording below is superseded by the verified matches
+and explicit approvals recorded here, not a general license allowance.
 
 ## Retrieve current findings
 

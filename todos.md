@@ -76,6 +76,10 @@ keeps photos visible while dragging, and shows progress while checking duplicate
 
 - Complete embedded Fyne font and Windows GLFW header notices, with pinned
   upstream source/text checks in the existing notice gate.
+- Apply the owner's fifteen reviewed FOSSA decisions with per-issue evidence
+  and PicFetch/version scope; retain all notices and global license policies.
+  See [the disposition record](docs/fossa-license-ci-2026-09-26.md) and use
+  `make fossa-findings PR=61` to check the latest scan independently.
 - Make AVIF notice validation work with a fresh Go module cache while retaining
   the reviewed payload and license checks.
 - PR 58 review hardening: isolated map trials preserve normal updater files,
@@ -92,15 +96,10 @@ keeps photos visible while dragging, and shows progress while checking duplicate
 
 ## Open
 
-- **PR 61 FOSSA decisions:** notice fixes are pushed in `f0ed64a`; review the
-  remaining findings using [the disposition guide](docs/fossa-license-ci-2026-09-26.md).
-  `make fossa-findings PR=61` now retrieves current scoped API evidence using
-  the ignored local credential. All 15 findings at `a1bd58e` have verified file
-  matches, including non-distributed docs/test/PowerPC/Java/C# sources and the
-  two new root findings from restored Bitstream/LGPL notice copies. Record the
-  authorized project/version decisions in FOSSA, then verify a fresh passing
-  remote check. Local notice checks and successful retrieval do not approve
-  policy findings. GoLand analysis of the isolated worktree remains unavailable.
+- **PR 61 IDE inspections:** GoLand analysis of the isolated worktree remains
+  unavailable. The license-policy decisions are applied, but do not substitute
+  for code inspection or a passing latest-revision CI check. Preserve the
+  verification limits in [the PR 61 record](plans/2026-09-26-pr61-license-notices.md).
 
 - **Similarity protocol race timeout:** the PR 61 final Docker race run hit
   `TestAnalysisProtocolPreservesLimitErrorsAndConfiguration/complete`'s 20-second
